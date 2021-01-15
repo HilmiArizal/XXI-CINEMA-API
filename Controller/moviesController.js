@@ -78,9 +78,9 @@ module.exports = {
                 dataMovies.imagemovies = imagePath;
 
                 const changeImage = dataMovies.changeImage;
-                const { title, duration, genre, synopsis, casts, producer, director, writter } = dataMovies;
+                const { title, duration, genre, synopsis, casts, producer, director, writter, playing, category } = dataMovies;
                 const queryEditMovies = `UPDATE movies SET title = '${title}', duration = ${duration}, genre = '${genre}', synopsis = '${synopsis}', casts = '${casts}', 
-                producer = '${producer}', director = '${director}', writter = '${writter}' WHERE idmovies = ${req.query.idmovies}`;
+                producer = '${producer}', director = '${director}', writter = '${writter}', playing = '${playing}', category = '${category}'  WHERE idmovies = ${req.query.idmovies}`;
                 database.query(queryEditMovies, (err, resultsEditMovies) => {
                     if (err) return res.status(500).send(err)
 
@@ -115,6 +115,22 @@ module.exports = {
         } catch (err) {
             console.log(err)
         }
+    },
+    getMoviesUpComing: (req,res) => {
+        const queryGetMoviesUpComing = `SELECT * FROM movies WHERE playing = 'Up Coming'`;
+        database.query(queryGetMoviesUpComing, (err, resulsGetMoviesUpComing) => {
+            if(err) return res.status(500).send(err)
+
+            res.status(200).send(resulsGetMoviesUpComing)
+        })
+    },
+    getMoviesNowPlaying: (req,res) => {
+        const queryGetMoviesNowPlaying = `SELECT * FROM movies WHERE playing = 'Now Playing'`;
+        database.query(queryGetMoviesNowPlaying, (err, resulsGetMoviesNowPlaying) => {
+            if(err) return res.status(500).send(err)
+
+            res.status(200).send(resulsGetMoviesNowPlaying)
+        })
     },
     addLikeMovie: (req, res) => {
         const queryAddLikeMovie = `INSERT INTO likemovie SET ?`;
@@ -175,12 +191,12 @@ module.exports = {
 
             const queryGetMovies = `SELECT * FROM movies WHERE idmovies = ${req.body.movieId}`;
             database.query(queryGetMovies, (err, resultsGetMovies) => {
-                if(err) return res.status(500).send(err)
+                if (err) return res.status(500).send(err)
 
                 const queryEditMovie = `UPDATE movies SET commentmovie = ${resultsGetMovies[0].commentmovie + 1} WHERE idmovies = ${req.body.movieId}`
                 database.query(queryEditMovie, (err, resultsEditMovies) => {
-                    if(err) return res.status(500).send(err)
-                    
+                    if (err) return res.status(500).send(err)
+
                 })
             })
 
@@ -195,7 +211,7 @@ module.exports = {
         WHERE m.idmovies = ${req.query.idmovies}
         `
         database.query(queryGetCommentMovie, (err, resultsGetCommentMovies) => {
-            if(err) return res.status(500).send(err)
+            if (err) return res.status(500).send(err)
 
             res.status(200).send(resultsGetCommentMovies)
         })
@@ -203,20 +219,33 @@ module.exports = {
     deleteCommentMovie: (req, res) => {
         const queryDeleteCommentMovie = `DELETE FROM commentmovie WHERE idcommentmovie = ${req.query.idcommentmovie}`;
         database.query(queryDeleteCommentMovie, (err, resultsDeleteCommentsMovie) => {
-            if(err) return res.status(500).send(err)
+            if (err) return res.status(500).send(err)
 
             const queryGetMovie = `SELECT * FROM movies WHERE idmovies = ${req.body.movieId}`;
             database.query(queryGetMovie, (err, resultsGetMovie) => {
-                if(err) return res.status(500).send(err)
-                
+                if (err) return res.status(500).send(err)
+
                 const queryEditMovie = `UPDATE movies SET commentmovie = ${resultsGetMovie[0].commentmovie - 1} WHERE idmovies = ${req.body.movieId}`
                 database.query(queryEditMovie, (err, resultsEditMovie) => {
-                    if(err) return res.status(500).send(err)
-                    
+                    if (err) return res.status(500).send(err)
+
                 })
             })
 
             res.status(200).send(resultsDeleteCommentsMovie)
+        })
+    },
+    get3CommentMovie: (req, res) => {
+        const queryGetCommentMovie = `
+        SELECT * FROM users u
+        LEFT JOIN commentmovie cm ON u.iduser = cm.userId
+        LEFT JOIN movies m ON cm.movieId = m.idmovies
+        WHERE m.idmovies = ${req.query.idmovies} LIMIT 3
+        `
+        database.query(queryGetCommentMovie, (err, resultsGetCommentMovies) => {
+            if (err) return res.status(500).send(err)
+
+            res.status(200).send(resultsGetCommentMovies)
         })
     }
 }
